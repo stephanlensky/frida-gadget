@@ -268,6 +268,7 @@ def inject_gadget_into_apk(
     js: str = None,
     custom_gadget_name: str = None,
     frida_version: str = None,
+    address: str = None,
 ):
     """Inject frida gadget into an APK
 
@@ -377,6 +378,9 @@ def inject_gadget_into_apk(
                         load_library_name,
                     )
                 config_data["interaction"]["path"] = f"{load_library_name}.script.so"
+                if address and config_data["interaction"].get("type") == "listen":
+                    config_data["interaction"]["address"] = address
+                    logger.debug("Setting Frida listen address to '%s'", address)
                 with open(
                     lib_arch_dir.joinpath(f"{load_library_name}.config.so"), "w"
                 ) as f:
@@ -414,13 +418,22 @@ def inject_gadget_into_apk(
                 if "interaction" not in config_data:
                     logger.error("The config file must contain an 'interaction' key.")
                     sys.exit(-1)
-                if "path" not in config_data["interaction"]:
+                if address and config_data["interaction"].get("type") == "listen":
+                    config_data["interaction"]["address"] = address
+                    logger.debug("Setting Frida listen address to '%s'", address)
+                    with open(
+                        lib_arch_dir.joinpath(f"{load_library_name}.config.so"), "w"
+                    ) as config_file:
+                        config_file.write(json.dumps(config_data, indent=4))
+                    del upload_files["config"]
+                elif "path" not in config_data["interaction"]:
                     logger.error("The config file must contain a 'path' key.")
                     sys.exit(-1)
-                logger.warning(
-                    "The script file must be located at '%s' on your device",
-                    config_data["interaction"]["path"],
-                )
+                else:
+                    logger.warning(
+                        "The script file must be located at '%s' on your device",
+                        config_data["interaction"]["path"],
+                    )
 
         for file_type, file_path in upload_files.items():
             if file_path:
@@ -625,6 +638,11 @@ def wrap_js_with_timeout(js_content: str, delay: int) -> str:
     "--apktool-path", default=None, help="Specify the path or command to run apktool."
 )
 @click.option("--frida-version", default=None, help="Specify the Frida version to use.")
+@click.option(
+    "--address",
+    default="127.0.0.1",
+    help="Address for Frida server to bind to. Default is 127.0.0.1. Use 0.0.0.0 to listen on all IPv4 interfaces.",
+)
 @click.option("--ks", default=None, help="The keystore file. If not provided, will use debug keystore.")
 @click.option("--ks-alias", default=None, help="The alias of the used key in the keystore.")
 @click.option("--ks-key-pass", default=None, help="The password for the key.")
@@ -656,6 +674,7 @@ def run(
     recompile_opts: str,
     apktool_path: str,
     frida_version: str,
+    address: str,
     ks: str,
     ks_alias: str,
     ks_key_pass: str,
@@ -812,6 +831,7 @@ def run(
         js,
         custom_gadget_name,
         frida_version,
+        address,
     )
 
     # Rebuild with apktool, print apk_path if process is success
