@@ -61,6 +61,8 @@ Usage
          --recompile-opts TEXT      Specify additional options for apktool recompile.
          --apktool-path TEXT        Specify the path or command to run apktool.
          --frida-version TEXT       Specify the Frida version to use.
+         --address TEXT             Address for Frida server to bind to. Default is 127.0.0.1. Use 0.0.0.0 to listen
+                                    on all IPv4 interfaces.
          --ks TEXT                  The keystore file. If not provided, will use debug keystore.
          --ks-alias TEXT            The alias of the used key in the keystore.
          --ks-key-pass TEXT         The password for the key.
