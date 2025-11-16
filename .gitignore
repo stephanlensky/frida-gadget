@@ -2,6 +2,7 @@ build/
 dist/
 *.pyc
 venv/
+.venv/
 .DS_Store
 *.egg-info
 clean.sh
